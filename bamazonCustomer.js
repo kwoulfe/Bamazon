@@ -35,32 +35,58 @@ var start = function() {
   });
 };
 
-
 var buy = function() {
-    inquirer
-      .prompt([
-        {
-          name: 'ProductID',
-          type: 'input',
-          message: 'Which item ID would you like to buy?',
-          validate: function(value) {
-            if (isNaN(value) == false) {
-              return true;
-            } else {
-              return false;
-            }
-          }
-        },
-        {
-          name: 'Quantity',
-          type: 'input',
-          message: 'How many would you like to purchase?',
-          validate: function(value) {
-            if (isNaN(value) == false) {
-              return true;
-            } else {
-              return false;
-            }
+  inquirer
+    .prompt([
+      {
+        name: 'ProductID',
+        type: 'input',
+        message: 'Which item ID would you like to buy?',
+        validate: function(value) {
+          if (isNaN(value) == false) {
+            return true;
+          } else {
+            return false;
           }
         }
-      ])
+      },
+      {
+        name: 'Quantity',
+        type: 'input',
+        message: 'How many would you like to purchase?',
+        validate: function(value) {
+          if (isNaN(value) == false) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+    ])
+    .then(function(answer) {
+      var query = 'SELECT * FROM products WHERE item_id=' + answer.Quantity;
+      connection.query(query, function(err, res) {
+        if (answer.Quantity <= res) {
+          for (i = 0; i < res.length; i++) {
+            console.log(
+              'We have ' +
+                res[i].stock_quantity +
+                ' ' +
+                res[i].product_name +
+                ' in stock.'
+            );
+            console.log(
+              'Thanks! ' +
+                res[i].stock_quantity +
+                ' ' +
+                res[i].product_name +
+                ' coming your way!'
+            );
+          }
+        } else {
+          console.log('Sorry, not enough of those in stock.');
+        }
+        start();
+      });
+    });
+};
