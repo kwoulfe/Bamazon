@@ -34,3 +34,33 @@ var start = function() {
     buy();
   });
 };
+
+
+var buy = function() {
+    inquirer
+      .prompt([
+        {
+          name: 'ProductID',
+          type: 'input',
+          message: 'Which item ID would you like to buy?',
+          validate: function(value) {
+            if (isNaN(value) == false) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+        },
+        {
+          name: 'Quantity',
+          type: 'input',
+          message: 'How many would you like to purchase?',
+          validate: function(value) {
+            if (isNaN(value) == false) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+        }
+      ])
