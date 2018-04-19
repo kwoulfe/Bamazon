@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 var inquirer = require('inquirer');
+var Table = require('cli-table');
 
 var connection = mysql.createConnection({
   host: 'localhost',
@@ -9,84 +10,85 @@ var connection = mysql.createConnection({
   database: 'bamazon_db'
 });
 
-connection.connect(function(err) {
-  console.log('connected as id: ' + connection.threadId + '\n');
-  start();
-});
-
 var start = function() {
-  var query = 'SELECT * FROM Products';
-  connection.query(query, function(err, res) {
+  connection.query('SELECT * FROM Products', function(err, res) {
+    var table = new Table({
+      head: ['ID', 'Product Name', 'Department', 'Price', 'Stock Quantity']
+    });
     for (i = 0; i < res.length; i++) {
-      console.log(
-        'Item ID: ' +
-          res[i].item_id +
-          ' || Product: ' +
-          res[i].product_name +
-          ' || Department: ' +
-          res[i].department_name +
-          ' || Price: ' +
-          res[i].price +
-          ' || Stock: ' +
-          res[i].stock_quantity
-      );
+      table.push([
+        res[i].item_id,
+        res[i].product_name,
+        res[i].department_name,
+        res[i].price,
+        res[i].stock_quantity
+      ]);
     }
-    buy();
+    console.log('  ');
+
+    console.log(table.toString());
   });
 };
 
-var buy = function() {
-  inquirer
-    .prompt([
-      {
-        name: 'ProductID',
-        type: 'input',
-        message: 'Which item ID would you like to buy?',
-        validate: function(value) {
-          if (isNaN(value) == false) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-      },
-      {
-        name: 'Quantity',
-        type: 'input',
-        message: 'How many would you like to purchase?',
-        validate: function(value) {
-          if (isNaN(value) == false) {
-            return true;
-          } else {
-            return false;
-          }
+inquirer
+  .prompt([
+    {
+      name: 'itemID',
+      type: 'input',
+      message: 'Which item ID would you like to buy?',
+      validate: function(value) {
+        if (isNaN(value) == false) {
+          return true;
+        } else {
+          return false;
         }
       }
-    ])
-    .then(function(answer) {
-      var query = 'SELECT * FROM products WHERE item_id=' + answer.Quantity;
-      connection.query(query, function(err, res) {
-        if (answer.Quantity <= res) {
-          for (i = 0; i < res.length; i++) {
-            console.log(
-              'We have ' +
-                res[i].stock_quantity +
-                ' ' +
-                res[i].product_name +
-                ' in stock.'
-            );
-            console.log(
-              'Thanks! ' +
-                res[i].stock_quantity +
-                ' ' +
-                res[i].product_name +
-                ' coming your way!'
-            );
-          }
+    },
+    {
+      name: 'Quantity',
+      type: 'input',
+      message: 'How many would you like to purchase?',
+      validate: function(value) {
+        if (isNaN(value) == false) {
+          return true;
         } else {
-          console.log('Sorry, not enough of those in stock.');
+          return false;
         }
-        start();
-      });
-    });
-};
+      }
+    }
+  ])
+  .then(function(answer) {
+    var chosenID = answer.itemID;
+    var chosenProduct = res[chosenID];
+    var chosenQuantity = answer.Quantity;
+
+    if (chosenQuantity < res[chosenID].stock_quantity) {
+      console.log(
+        'Total cost for ' +
+          answer.Quantity +
+          ' ' +
+          res[chosenID].product_name +
+          ' is: ' +
+          res[chosenID].price * chosenQuantity
+      );
+      connection.query(
+        'UPDATE products SET ? WHERE ?',
+        [
+          {
+            stock_quantity: res[chosenID].stock_quantity - chosenQuantity
+          },
+          {
+            item_id: res[chosenID].item_id
+          }
+        ],
+        function(err, res) {
+          start();
+        }
+      );
+    } else {
+      console.log('Sorry, not enough of those in stock.');
+      start();
+    }
+  });
+
+start();

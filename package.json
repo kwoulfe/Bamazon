@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/kwoulfe/Bamazon/issues"
   },
-  "homepage": "https://github.com/kwoulfe/Bamazon#readme"
+  "homepage": "https://github.com/kwoulfe/Bamazon#readme",
+  "dependencies": {
+    "cli-table": "^0.3.1"
+  }
 }
